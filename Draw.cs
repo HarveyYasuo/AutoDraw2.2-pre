@@ -970,7 +970,7 @@ public static class Drawing
 
             if (FreeDraw2)
             {
-                var dotDelayMs = Math.Max(ClickDelay / 20, 8);
+                var dotDelayMs = (int)Math.Max(Interval / TimeSpan.TicksPerMillisecond, 1);
                 for (var i = 0; i < optimizedPixels.Count; i++)
                 {
                     if (StackHalted) break;

@@ -1,0 +1,320 @@
+<Window x:Class="Autodraw.MainWindow"
+        xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:assets="clr-namespace:Autodraw.Properties"
+        xmlns:avaloniaControls="clr-namespace:UVtools.AvaloniaControls;assembly=UVtools.AvaloniaControls"
+        xmlns:cp="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls.ColorPicker"
+
+        mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="650"
+        x:Name="AutoDrawUnified"
+
+        Icon="/Assets/autodraw.ico"
+
+        Width="1000"
+        Height="650"
+        CanResize="True"
+
+        MinWidth="900"
+        MinHeight="550"
+        WindowStartupLocation="CenterScreen"
+
+        Title="AutoDraw Unified - ColorSplitter + AutoDraw"
+
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaChromeHints="NoChrome"
+        ExtendClientAreaTitleBarHeightHint="20"
+        SystemDecorations="BorderOnly"
+        PointerPressed="OnPointerPressed">
+
+    <Window.Styles>
+        <StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Fluent/Fluent.xaml" />
+    </Window.Styles>
+
+    <Grid RowDefinitions="20,1*">
+        <!--Toolbar-->
+        <Canvas Grid.Row="0" Width="{Binding $parent[Window].Bounds.Width}" Height="20">
+            <Canvas Classes="Toolbar ClickThru" Width="{Binding $parent[Window].Bounds.Width}" Height="20" />
+            <Image Classes="Toolbar" />
+            <Image Classes="ToolbarSecond" />
+            <Image Classes="ToolbarThird" />
+            <StackPanel Classes="Toolbar" Orientation="Horizontal">
+                <Label Classes="Title Bold ClickThru" Margin="0" Padding="6 0 0 0" Height="20"
+                       VerticalContentAlignment="Center"
+                       Content="AutoDraw Unified - ColorSplitter + AutoDraw"/>
+                <Button Classes="Title" Name="DevButton" Margin="2 0 0 0" Padding="0" Background="Transparent"
+                        Height="18" VerticalContentAlignment="Center" FontSize="12" Content="v2.2">
+                </Button>
+                <Button Name="SettingsButton" Margin="2 0 0 0" Padding="0" Background="Transparent" Height="18"
+                        VerticalContentAlignment="Center">
+                    <Image Source="avares://Autodraw/Assets/gear.png" />
+                </Button>
+            </StackPanel>
+            <Grid Name="ToolbarButtons" Classes="ToolbarButtons" Width="{Binding $parent[Window].Bounds.Width}"
+                  ColumnDefinitions="*,20,20,20">
+                <Button Classes="MinimizeApp ToolbarButton" Name="MinimizeAppButton" Grid.Column="2" Width="20"
+                        Height="20" FontSize="14" Padding="0">-</Button>
+                <Button Classes="CloseApp ToolbarButton" Name="CloseAppButton" Grid.Column="3" Width="20" Height="20"
+                        FontSize="14" Padding="0">
+                    <Image Classes="CloseApp ToolbarButton" />
+                </Button>
+            </Grid>
+        </Canvas>
+
+        <!--Body: Left controls, Center preview, Right panel (layers + configs)-->
+        <Grid Classes="Body" Grid.Row="1" Name="Body" Margin="8" ColumnDefinitions="240,8,1*,8,260">
+            <!--LEFT PANEL: Primary Controls (ColorSplitter + Drawing)-->
+            <Border Grid.Column="0" CornerRadius="4" Background="#4000" Padding="6">
+                <ScrollViewer>
+                    <StackPanel Spacing="4">
+
+                        <!--=== IMAGE ===-->
+                        <Label FontSize="13" FontWeight="Bold" Padding="0" Margin="0 4 0 0">Image</Label>
+                        <Grid ColumnDefinitions="*,4,*">
+                            <Button Name="ImportButton" Height="28" CornerRadius="3"
+                                    Background="#33ffffff" HorizontalContentAlignment="Center" FontSize="11">Load...</Button>
+                            <Button Name="SaveImageButton" Grid.Column="2" Height="28" CornerRadius="3"
+                                    Background="#33ffffff" HorizontalContentAlignment="Center" FontSize="11">Save</Button>
+                        </Grid>
+                        <Separator/>
+
+                        <!--=== QUANTIZER ===-->
+                        <Label FontSize="13" FontWeight="Bold" Padding="0">Quantizer (ColorSplitter)</Label>
+                        <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="80,4,*">
+                            <Label Grid.Row="0" Grid.Column="0" FontSize="11" VerticalContentAlignment="Center">Colors:</Label>
+                            <TextBox Grid.Row="0" Grid.Column="2" Name="ColorCountBox" CornerRadius="2" FontSize="12"
+                                     Text="12" Height="22"/>
+                            <Label Grid.Row="1" Grid.Column="0" FontSize="11" VerticalContentAlignment="Center">Algorithm:</Label>
+                            <ComboBox Grid.Row="1" Grid.Column="2" Name="QuantizerSelector" SelectedIndex="0"
+                                      FontSize="11" CornerRadius="2" Height="22">
+                                <ComboBoxItem Content="Adaptive (ImageMagick)"/>
+                                <ComboBoxItem Content="K-Means" IsEnabled="False"/>
+                                <ComboBoxItem Content="Median Cut" IsEnabled="False"/>
+                            </ComboBox>
+                            <Label Grid.Row="2" Grid.Column="0" FontSize="11" VerticalContentAlignment="Center">Color Space:</Label>
+                            <ComboBox Grid.Row="2" Grid.Column="2" Name="ColorSpaceSelector" SelectedIndex="0"
+                                      FontSize="11" CornerRadius="2" Height="22">
+                                <ComboBoxItem Content="RGB"/>
+                                <ComboBoxItem Content="HSL" IsEnabled="False"/>
+                                <ComboBoxItem Content="LAB" IsEnabled="False"/>
+                            </ComboBox>
+                            <Label Grid.Row="3" Grid.Column="0" FontSize="11" VerticalContentAlignment="Center">Bg Color:</Label>
+                            <Button Grid.Row="3" Grid.Column="2" Name="BgColorButton" Height="20" CornerRadius="2"
+                                    Background="#3000" BorderBrush="#8cffffff" BorderThickness="1" Cursor="Hand"/>
+                        </Grid>
+                        <Button Name="ExportLayersButton" Height="24" CornerRadius="3" FontSize="11"
+                                Background="#33ffffff" HorizontalContentAlignment="Center">Export Layers to Folder...</Button>
+                        <Separator/>
+
+                        <!--=== DRAWING SPEED ===-->
+                        <Label FontSize="13" FontWeight="Bold" Padding="0">Drawing Speed</Label>
+                        <Grid ColumnDefinitions="*,4,*" RowDefinitions="Auto,Auto">
+                            <Label Grid.Row="0" Grid.Column="0" FontSize="11" Padding="0">Interval</Label>
+                            <Label Grid.Row="0" Grid.Column="2" FontSize="11" Padding="0">Click Delay</Label>
+                            <TextBox Grid.Row="1" Grid.Column="0" Name="DrawIntervalBox" CornerRadius="2"
+                                     FontSize="12" Text="7500" Height="22"/>
+                            <TextBox Grid.Row="1" Grid.Column="2" Name="ClickDelayBox" CornerRadius="2"
+                                     FontSize="12" Text="600" Height="22"/>
+                        </Grid>
+
+                        <!--=== THRESHOLDS ===-->
+                        <Label FontSize="13" FontWeight="Bold" Padding="0">Thresholds</Label>
+                        <Grid ColumnDefinitions="*,4,*" RowDefinitions="Auto,Auto,Auto">
+                            <Label Grid.Row="0" Grid.Column="0" FontSize="11" Padding="0">Min Luminance</Label>
+                            <Label Grid.Row="0" Grid.Column="2" FontSize="11" Padding="0">Max Luminance</Label>
+                            <TextBox Grid.Row="1" Grid.Column="0" Name="MinThreshBox" CornerRadius="2"
+                                     FontSize="12" Text="0" Height="22"/>
+                            <TextBox Grid.Row="1" Grid.Column="2" Name="MaxThreshBox" CornerRadius="2"
+                                     FontSize="12" Text="127" Height="22"/>
+                            <Label Grid.Row="2" Grid.Column="0" FontSize="11" Padding="0" VerticalContentAlignment="Center">Alpha Threshold</Label>
+                            <TextBox Grid.Row="2" Grid.Column="2" Name="AlphaThreshBox" CornerRadius="2"
+                                     FontSize="12" Text="127" Height="22"/>
+                        </Grid>
+
+                        <!--=== ALGORITHM ===-->
+                        <Label FontSize="13" FontWeight="Bold" Padding="0">Drawing Algorithm</Label>
+                        <ComboBox Name="DrawAlgorithmBox" SelectedIndex="0" FontSize="11" CornerRadius="2" Height="22">
+                            <ComboBoxItem Content="DFS"/>
+                            <ComboBoxItem Content="Edge Traversal"/>
+                        </ComboBox>
+                        <CheckBox Name="FreeDrawCheckbox" Content="FreeDraw Bypass" FontSize="11" Margin="0 2 0 0"/>
+                        <CheckBox Name="PathOptimCheckbox" Content="Path Optimization (Nearest Neighbor)"
+                                  IsChecked="True" FontSize="11"/>
+                        <CheckBox Name="LumSortCheckbox" Content="Sort Layers: Light to Dark"
+                                  IsChecked="True" FontSize="11"/>
+                        <CheckBox Name="AutoAdvanceCheckbox" Content="Auto-advance layers"
+                                  IsChecked="False" FontSize="11"/>
+                        <Separator/>
+
+                        <!--=== FILTERS ===-->
+                        <Label FontSize="13" FontWeight="Bold" Padding="0">Filters</Label>
+                        <CheckBox Name="InvertFilterCheck" Content="Invert" FontSize="11"/>
+                        <CheckBox Name="OutlineFilterCheck" Content="Outline" FontSize="11"/>
+                        <CheckBox Name="CrosshatchFilterCheck" Content="Crosshatch" FontSize="11"/>
+                        <CheckBox Name="DiagCrossFilterCheck" Content="Diagonal Crosshatch" FontSize="11"/>
+                        <Grid ColumnDefinitions="*,4,40" Margin="12 0 0 0">
+                            <Label Grid.Column="0" FontSize="11" VerticalContentAlignment="Center">H Stripes:</Label>
+                            <TextBox Grid.Column="2" Name="HorizontalFilterText" CornerRadius="2" FontSize="11" Height="20" Text="0"/>
+                        </Grid>
+                        <Grid ColumnDefinitions="*,4,40" Margin="12 0 0 0">
+                            <Label Grid.Column="0" FontSize="11" VerticalContentAlignment="Center">V Stripes:</Label>
+                            <TextBox Grid.Column="2" Name="VerticalFilterText" CornerRadius="2" FontSize="11" Height="20" Text="0"/>
+                        </Grid>
+                        <Separator/>
+
+                        <!--=== ACTION BUTTONS ===-->
+                        <Button Name="ProcessButton" Height="32" CornerRadius="3"
+                                Background="#33ffffff" HorizontalContentAlignment="Center"
+                                FontSize="13" FontWeight="Bold">Process Image</Button>
+                        <Button Name="StartDrawingButton" Height="40" CornerRadius="4"
+                                Background="#4a9eff" HorizontalContentAlignment="Center"
+                                FontSize="15" FontWeight="Bold" Margin="0 4 0 8">Start Drawing</Button>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!--CENTER PANEL: Preview only-->
+            <Grid Grid.Column="2">
+                <Border CornerRadius="4" Background="#4000">
+                    <Grid RowDefinitions="Auto,*,Auto">
+                        <!--Toolbar above preview-->
+                        <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto,Auto" Margin="4 2">
+                            <Button Name="ClearImageButton" Grid.Column="0" FontSize="10" Height="20"
+                                    Padding="6 0" CornerRadius="2" Background="#33ffffff">Clear</Button>
+                            <Label Grid.Column="2" FontSize="10" VerticalContentAlignment="Center"
+                                   Name="ImageInfoText">No image loaded</Label>
+                            <Button Name="RefreshPreviewButton" Grid.Column="3" FontSize="10" Height="20"
+                                    Padding="6 0" CornerRadius="2" Background="#33ffffff" Margin="4 0 0 0">Refresh</Button>
+                        </Grid>
+                        <Canvas Grid.Row="1" Classes="ImagePreview" VerticalAlignment="Stretch">
+                            <Canvas.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Name="ImageSaveImage" Header="Save Image"/>
+                                    <MenuItem Name="ImageClearImage" Header="Clear Image"/>
+                                </ContextMenu>
+                            </Canvas.ContextMenu>
+                            <Border Classes="ImagePreview"
+                                    Width="{Binding $parent.Bounds.Width}"
+                                    Height="{Binding $parent.Bounds.Height}" IsHitTestVisible="False"/>
+                            <avaloniaControls:AdvancedImageBox Name="ImagePreview" ShowGrid="False"
+                                                               ZoomWithMouseWheelBehaviour="ZoomLevelsAltNative"
+                                                               AutoZoomToFit="True"
+                                                               Width="{Binding $parent.Bounds.Width}"
+                                                               Height="{Binding $parent.Bounds.Height}"/>
+                        </Canvas>
+                        <!--Size controls-->
+                        <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto,4,Auto,*,Auto" Margin="4 2">
+                            <Label Grid.Column="0" FontSize="10" VerticalContentAlignment="Center">W:</Label>
+                            <TextBox Grid.Column="1" Name="WidthInput" FontSize="11" CornerRadius="2" Height="20" Text="318"/>
+                            <Button Grid.Column="2" Name="WidthLock" Width="20" Height="20" Padding="1" Background="Transparent" FontSize="10">W</Button>
+                            <Label Grid.Column="4" FontSize="10" VerticalContentAlignment="Center">H:</Label>
+                            <TextBox Grid.Column="5" Name="HeightInput" FontSize="11" CornerRadius="2" Height="20" Text="318"/>
+                            <Button Grid.Column="6" Name="HeightLock" Width="20" Height="20" Padding="1" Background="Transparent" FontSize="10">H</Button>
+                        </Grid>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!--RIGHT PANEL: Layers + Configs-->
+            <Grid Grid.Column="4" RowDefinitions="1*,8,Auto">
+                <!--Layer List-->
+                <Border CornerRadius="4" Background="#4000" Padding="4">
+                    <Grid RowDefinitions="20,*">
+                        <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto">
+                            <Label FontSize="11" Padding="4 0" FontWeight="Bold">Layers</Label>
+                            <Button Grid.Column="2" Name="ExportLayersMemoryButton" FontSize="10" Height="18"
+                                    Padding="6 0" CornerRadius="2" Background="#33ffffff">Export</Button>
+                        </Grid>
+                        <ListBox Grid.Row="1" Name="LayerList" Margin="0 4 0 0" Background="Transparent"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                 SelectionMode="AlwaysSelected">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Border CornerRadius="4" Padding="4" Margin="1" Background="#1affffff"
+                                            MinHeight="40" Cursor="Hand">
+                                        <Grid ColumnDefinitions="40,8,*,Auto" RowDefinitions="*">
+                                            <Image Grid.Column="0" Source="{Binding LayerPreviewBitmap}"
+                                                   Width="40" Height="40" Stretch="Uniform"
+                                                   HorizontalAlignment="Center"/>
+                                            <StackPanel Grid.Column="2" Orientation="Vertical"
+                                                        VerticalAlignment="Center">
+                                                <Label FontSize="11" Content="{Binding HexColor}"
+                                                       Padding="0"/>
+                                                <Label FontSize="9" Padding="0" Opacity="0.6"
+                                                       Content="{Binding PixelCount}"/>
+                                            </StackPanel>
+                                            <Border Grid.Column="3" CornerRadius="2"
+                                                    Width="20" Height="20" Margin="4 0 0 0"
+                                                    Background="{Binding LayerColor}"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Grid>
+                </Border>
+
+                <!--Configs Management-->
+                <Border Grid.Row="2" CornerRadius="4" Background="#4000" Padding="6" MinHeight="180" MaxHeight="320">
+                    <ScrollViewer>
+                        <StackPanel Spacing="3">
+                            <Label FontSize="12" FontWeight="Bold" Padding="0">Configs</Label>
+                            <Grid ColumnDefinitions="*,Auto">
+                                <Button Name="RefreshConfigsButton" FontSize="10" Height="18"
+                                        Padding="6 0" CornerRadius="2" Background="#33ffffff">Refresh</Button>
+                            </Grid>
+                            <ListBox Name="ConfigsListBox" CornerRadius="2" Background="#3000" FontSize="10"
+                                     MinHeight="40" MaxHeight="80"/>
+                            <Grid ColumnDefinitions="*,4,*">
+                                <Button Name="SelectFolderElement" FontSize="10" Height="20" CornerRadius="2"
+                                        Background="#33ffffff" HorizontalContentAlignment="Center">Folder</Button>
+                                <Button Grid.Column="2" Name="LoadSelectButton" FontSize="10" Height="20" CornerRadius="2"
+                                        Background="#33ffffff" HorizontalContentAlignment="Center">Load Sel.</Button>
+                            </Grid>
+                            <Grid ColumnDefinitions="*,4,*">
+                                <Button Name="SaveConfigButton" FontSize="10" Height="20" CornerRadius="2"
+                                        Background="#33ffffff" HorizontalContentAlignment="Center">Save</Button>
+                                <Button Grid.Column="2" Name="OpenConfigElement" FontSize="10" Height="20" CornerRadius="2"
+                                        Background="#33ffffff" HorizontalContentAlignment="Center">Open...</Button>
+                            </Grid>
+
+                            <Separator/>
+
+                            <Label FontSize="11" FontWeight="Bold" Padding="0">Color Picker Position</Label>
+                            <TextBlock FontSize="9" Padding="0" TextWrapping="Wrap">Coordinates of the hex input in your drawing app.</TextBlock>
+                            <CheckBox Name="ColorPickerEnabled" Content="Set color per layer" IsChecked="False" FontSize="10"/>
+                            <Grid ColumnDefinitions="*,4,*" RowDefinitions="Auto,Auto">
+                                <Grid Grid.Row="0" ColumnDefinitions="Auto,*">
+                                    <Label FontSize="10" Padding="0" VerticalContentAlignment="Center">X:</Label>
+                                    <TextBox Grid.Column="1" Name="ColorPickerX" CornerRadius="2" FontSize="10" Height="18" Text="1670"/>
+                                </Grid>
+                                <Grid Grid.Row="0" Grid.Column="2" ColumnDefinitions="Auto,*">
+                                    <Label FontSize="10" Padding="0" VerticalContentAlignment="Center">Y:</Label>
+                                    <TextBox Grid.Column="1" Name="ColorPickerY" CornerRadius="2" FontSize="10" Height="18" Text="820"/>
+                                </Grid>
+                                <Grid Grid.Row="1" ColumnDefinitions="Auto,*" Margin="0 2 0 0">
+                                    <Label FontSize="10" Padding="0" VerticalContentAlignment="Center">Y2:</Label>
+                                    <TextBox Grid.Column="1" Name="ColorPickerY2" CornerRadius="2" FontSize="10" Height="18" Text="824"/>
+                                </Grid>
+                                <Label Grid.Row="1" Grid.Column="2" FontSize="9" Padding="4 0"
+                                       VerticalContentAlignment="Center">2nd click Y</Label>
+                            </Grid>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!--Color Picker Overlay-->
+        <Grid Name="ColorPaletteOverlay" Grid.Row="1" RowDefinitions="*,48" Margin="80 20" IsVisible="False">
+            <Border Grid.RowSpan="2" CornerRadius="8" Background="#232323"/>
+            <cp:ColorView Name="ColorPickerView" Margin="8" IsAlphaVisible="false"
+                          IsColorPreviewVisible="True" IsAccentColorsVisible="False"/>
+            <Button Name="CloseColorPicker" CornerRadius="4" BorderThickness="0" Classes="accent"
+                    Grid.Row="1" Height="30" Margin="0 0 0 8"
+                    HorizontalAlignment="Center" VerticalContentAlignment="Center">Close</Button>
+        </Grid>
+    </Grid>
+</Window>

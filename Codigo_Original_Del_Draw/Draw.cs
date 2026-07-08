@@ -110,7 +110,6 @@ public static class Drawing
     public static bool IsPaused;
     public static bool IsSkipping;
     public static bool FreeDraw2 = false;
-    public static bool AutoAdvance = false;
 
     public static Vector2 LastPos = Config.Preview_LastLockPos;
 
@@ -913,130 +912,6 @@ public static class Drawing
 
         return true;
         */
-    }
-
-    public static async Task<bool> DrawColorLayers(List<ColorLayerData> layers, List<InputAction> actions, Vector2 position)
-    {
-        StackHalted = false;
-        var continueTcs = new TaskCompletionSource<bool>();
-
-        void KeybindHandler(object? sender, KeyboardHookEventArgs e)
-        {
-            if (e.Data.KeyCode == Config.Keybind_StopDrawing) { StackHalted = true; }
-            if (e.Data.KeyCode == Config.Keybind_StartDrawing && !continueTcs.Task.IsCompleted)
-            {
-                continueTcs.TrySetResult(true);
-            }
-        }
-        Input.taskHook.KeyReleased += KeybindHandler;
-
-        for (var layerIndex = 0; layerIndex < layers.Count; layerIndex++)
-        {
-            if (StackHalted) break;
-
-            if (layerIndex > 0 && !AutoAdvance)
-            {
-                continueTcs = new TaskCompletionSource<bool>();
-                await continueTcs.Task;
-                if (StackHalted) break;
-            }
-
-            var layer = layers[layerIndex];
-
-            var actionsCopy = new List<InputAction>(actions.Select(act =>
-                new InputAction(act.Action, act.Data is not null ? act.Data : act.Position)));
-
-            var hex = layer.HexColor.Replace("#", "");
-            foreach (var act in actionsCopy)
-            {
-                if (act.Action == InputAction.ActionType.WriteString && !string.IsNullOrEmpty(act.Data))
-                {
-                    act.Data = act.Data.Replace("{colorHex}", hex);
-                }
-            }
-
-            foreach (var act in actionsCopy)
-            {
-                act.PerformAction();
-                await NOP(500000);
-            }
-
-            var optimizedPixels = PathOptimizer.OptimizePath(layer.Pixels);
-            if (optimizedPixels.Count == 0) continue;
-
-            var firstPos = new Vector2(position.X + optimizedPixels[0].X, position.Y + optimizedPixels[0].Y);
-            Input.MoveTo((short)firstPos.X, (short)firstPos.Y);
-            await NOP(50000);
-
-            if (FreeDraw2)
-            {
-                var clusters = PathOptimizer.GroupIntoClusters(layer.Pixels, 25f);
-                var isFirst = true;
-
-                foreach (var cluster in clusters)
-                {
-                    if (StackHalted) break;
-                    if (cluster.Count == 0) continue;
-
-                    var cFirst = new Vector2(position.X + cluster[0].X, position.Y + cluster[0].Y);
-
-                    if (!isFirst)
-                    {
-                        Input.SendClickUp(Input.MouseTypes.MouseLeft);
-                        await NOP(ClickDelay * 2500);
-                    }
-
-                    Input.MoveTo((short)cFirst.X, (short)cFirst.Y);
-                    await NOP(ClickDelay * 500);
-                    Input.SendClickDown(Input.MouseTypes.MouseLeft);
-
-                    Vector2 prevPoint = cluster[0];
-                    for (var i = 1; i < cluster.Count; i++)
-                    {
-                        if (StackHalted) break;
-                        var px = (short)(position.X + cluster[i].X);
-                        var py = (short)(position.Y + cluster[i].Y);
-                        
-                        float dist = Vector2.Distance(prevPoint, cluster[i]);
-                        if (dist > 1.5f)
-                        {
-                            Input.SendClickUp(Input.MouseTypes.MouseLeft);
-                            await NOP(ClickDelay * 500);
-                            Input.MoveTo(px, py);
-                            await NOP(ClickDelay * 500);
-                            Input.SendClickDown(Input.MouseTypes.MouseLeft);
-                        }
-                        else
-                        {
-                            Input.MoveTo(px, py);
-                            await NOP(Interval);
-                        }
-                        prevPoint = cluster[i];
-                    }
-
-                    isFirst = false;
-                }
-
-                if (!isFirst) Input.SendClickUp(Input.MouseTypes.MouseLeft);
-            }
-            else
-            {
-                Input.SendClickDown(Input.MouseTypes.MouseLeft);
-                for (var i = 0; i < optimizedPixels.Count; i++)
-                {
-                    if (StackHalted) break;
-                    var px = (short)(position.X + optimizedPixels[i].X);
-                    var py = (short)(position.Y + optimizedPixels[i].Y);
-                    Input.MoveTo(px, py);
-                    await NOP(Interval);
-                }
-                Input.SendClickUp(Input.MouseTypes.MouseLeft);
-                await NOP(ClickDelay * 2500);
-            }
-        }
-
-        Input.taskHook.KeyReleased -= KeybindHandler;
-        return true;
     }
 
     private class Pos

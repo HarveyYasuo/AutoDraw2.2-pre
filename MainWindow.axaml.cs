@@ -95,6 +95,10 @@ public partial class MainWindow : Window
         // Size controls
         WidthInput.TextChanging += WidthInputOnTextChanged;
         HeightInput.TextChanging += HeightInputOnTextChanged;
+        WidthInput.LostFocus += (_, _) => ApplyResizeFromWidthInput();
+        HeightInput.LostFocus += (_, _) => ApplyResizeFromHeightInput();
+        WidthInput.KeyDown += (_, e) => { if (e.Key == Avalonia.Input.Key.Enter) ApplyResizeFromWidthInput(); };
+        HeightInput.KeyDown += (_, e) => { if (e.Key == Avalonia.Input.Key.Enter) ApplyResizeFromHeightInput(); };
         WidthLock.Click += (_, _) => { widthLock = widthLock > 0 ? 0 : widthNumber; };
         HeightLock.Click += (_, _) => { heightLock = heightLock > 0 ? 0 : heightNumber; };
 
@@ -426,6 +430,69 @@ public partial class MainWindow : Window
         _inChange = true; HeightInput.Text = numText; _inChange = false;
         e.Handled = true;
         if (numText.Length < 1) return;
+    }
+
+    private void ApplyResizeFromWidthInput()
+    {
+        if (_rawBitmap == null) return;
+        if (!int.TryParse(WidthInput.Text, out var newWidth) || newWidth < 1) return;
+        if (newWidth == _rawBitmap.Width) return;
+
+        int newHeight;
+        if (widthLock > 0)
+        {
+            var ratio = (double)_rawBitmap.Height / _rawBitmap.Width;
+            newHeight = (int)Math.Round(newWidth * ratio);
+            if (newHeight < 1) newHeight = 1;
+            _inChange = true; HeightInput.Text = newHeight.ToString(); _inChange = false;
+        }
+        else
+        {
+            newHeight = _rawBitmap.Height;
+        }
+
+        ResizeRawBitmap(newWidth, newHeight);
+    }
+
+    private void ApplyResizeFromHeightInput()
+    {
+        if (_rawBitmap == null) return;
+        if (!int.TryParse(HeightInput.Text, out var newHeight) || newHeight < 1) return;
+        if (newHeight == _rawBitmap.Height) return;
+
+        int newWidth;
+        if (heightLock > 0)
+        {
+            var ratio = (double)_rawBitmap.Width / _rawBitmap.Height;
+            newWidth = (int)Math.Round(newHeight * ratio);
+            if (newWidth < 1) newWidth = 1;
+            _inChange = true; WidthInput.Text = newWidth.ToString(); _inChange = false;
+        }
+        else
+        {
+            newWidth = _rawBitmap.Width;
+        }
+
+        ResizeRawBitmap(newWidth, newHeight);
+    }
+
+    private void ResizeRawBitmap(int newWidth, int newHeight)
+    {
+        var old = _rawBitmap;
+        _rawBitmap = new SKBitmap(newWidth, newHeight);
+        using (var canvas = new SKCanvas(_rawBitmap))
+        {
+            canvas.Clear(SKColors.Transparent);
+            using var paint = new SKPaint { FilterQuality = SKFilterQuality.High, IsAntialias = true };
+            canvas.DrawBitmap(old, new SKRect(0, 0, newWidth, newHeight), paint);
+        }
+        old?.Dispose();
+        _processedBitmap = null;
+        _currentLayers.Clear();
+        LayerList.Items.Clear();
+        _layersDirty = true;
+        UpdatePreview();
+        ImageInfoText.Content = $"{newWidth}x{newHeight}px";
     }
 
     // === TEXT HELPERS ===

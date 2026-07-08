@@ -53,4 +53,43 @@ public static class PathOptimizer
 
         return result;
     }
+
+    public static List<List<Vector2>> GroupIntoClusters(List<Vector2> pixels, float maxDistSq = 25f)
+    {
+        if (pixels.Count == 0)
+            return new List<List<Vector2>>();
+
+        var visited = new bool[pixels.Count];
+        var clusters = new List<List<Vector2>>();
+
+        for (var i = 0; i < pixels.Count; i++)
+        {
+            if (visited[i]) continue;
+
+            var cluster = new List<Vector2>();
+            var queue = new Queue<int>();
+            queue.Enqueue(i);
+            visited[i] = true;
+
+            while (queue.Count > 0)
+            {
+                var idx = queue.Dequeue();
+                cluster.Add(pixels[idx]);
+
+                for (var j = 0; j < pixels.Count; j++)
+                {
+                    if (visited[j]) continue;
+                    if (Vector2.DistanceSquared(pixels[idx], pixels[j]) <= maxDistSq)
+                    {
+                        visited[j] = true;
+                        queue.Enqueue(j);
+                    }
+                }
+            }
+
+            clusters.Add(OptimizePath(cluster));
+        }
+
+        return clusters;
+    }
 }

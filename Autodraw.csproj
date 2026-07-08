@@ -23,8 +23,8 @@
         <StartupObject></StartupObject>
         <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
         <PlatformTarget>AnyCPU</PlatformTarget>
-        <FileVersion>2.2.0.0</FileVersion>
-        <AssemblyVersion>7.1.2024</AssemblyVersion>
+        <FileVersion>2.2.2.0</FileVersion>
+        <AssemblyVersion>2.2.2.0</AssemblyVersion>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -86,6 +86,7 @@
 
     <ItemGroup>
         <Compile Remove="Assets\Window1.axaml.cs"/>
+        <Compile Remove="Codigo_Original_Del_Draw\**"/>
     </ItemGroup>
 
     <ItemGroup>
